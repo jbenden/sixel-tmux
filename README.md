@@ -37,22 +37,27 @@ This is another sixel-tmux running inside another cutexterm in "sixel fallback" 
 
 Since cutexterm uses xterm, which features proper sixel support, and both cutexterm and mintty examples consist of running the client and the server the same terminal, you may say it's easy, and still not convinced sixel-tmux is cool.
 
-Here's a regular off-the-shelf (off the Windows store?) Windows Terminal Preview connecting to a session that has been opened in mintty, with both terminals side-by-side on Windows 10, and Windows Terminal automatically benefitting from the desrasterized fallback mode of the previously viewed sixels.
+Here's a regular off-the-shelf (off the Windows store?) Windows Terminal Preview using sixel-tmux to become sixel-aware and display derasterized pictures to replace the sixels sequence:
 ![sixel-tmux offering derasterized sixels from mintty to Windows Terminal Preview](https://raw.githubusercontent.com/csdvrx/sixel-tmux/main/examples/sixel-tmux-inside-windows-terminal.gif)
+
+Here's another regular Windows Terminal Preview connecting to a sixel-tmux session that has been opened in mintty, with both terminals side-by-side on Windows 10, and Windows Terminal automatically benefitting from the desrasterized fallback mode of the previously viewed sixels from within mintty: notice how sixel-tmux shows pure sixel content for as long as possible, here until Windows Terminal Preview connects to the session
+![sixel-tmux offering derasterized sixels from mintty to Windows Terminal Preview](https://raw.githubusercontent.com/csdvrx/sixel-tmux/main/examples/sixel-tmux-inside-both-mintty-and-windows-terminal.gif)
 
 Now, is that cool or what?
 
-## It's cool but explain me in plain english like I'm 5
+## It's cool, but explain me like I'm 5
 
-You can now see cute pictures in your terminal, even if you shouldn't be able to do that!!
+You can now see cute pictures inside your terminal, even if you shouldn't be
+able to do that, say if your terminal is like Windows Terminal and doesn't
+support the sixel format!! (at least, not yet)
 
 This is why this second mode is very ambitious: it is like "putting magical
-glasses" on your existing terminal blind to sixels graphics
+glasses" on your existing terminal that is currently blind to sixels graphics.
 
 Thanks to having sixel-tmux magical glasses on, your terminal can now see
-sixels without any extra change: while before it showed you nothing or just an
-empty square (due to your terminal not supporting sixels), your terminal now
-shows you the best it can do with the sixels! 
+sixels without changing anything else: while before it showed you nothing at all,
+or just an empty square (due to your terminal not supporting sixels), your
+terminal now shows you the best it can do with the sixels! 
 
 Of course, the glasses are not really magical, therefore they are imperfect:
 the picture will be blocky due to the technical limitations of derasterizing in
@@ -98,7 +103,7 @@ You don't believe me? They have been blocking patches adding sixels support for
 spurious reasons, causing over 5 years of delays for most Linux users.
 
 Skip if you don't care about the politics, but you can get more details on the
-situation if you can stomach my long https://github.com/csdvrx/sixel-tmux/RANTS.md
+situation if you can stomach my long https://github.com/csdvrx/sixel-tmux/blob/main/RANTS.md
 
 ### Testing sixel-tmux
 
@@ -457,16 +462,16 @@ In this final test, we will check if the font you've selected supports the vario
 5. Type in the console echo followed by the sign less than, then a space, then the sign equal, then another space, then bring back this line and remove the spaces.
 
 For the first test, you should see a bear without lines insides its head:
-![Font test 1](https://raw.githubusercontent.com/csdvrx/sixel-tmux/main/examples/font-test-1.jpg)
+![Font test 1](https://raw.githubusercontent.com/csdvrx/sixel-tmux/main/examples/font-test1.jpg)
 
 For the second test, you should see thin lines:
-![Font test 2](https://raw.githubusercontent.com/csdvrx/sixel-tmux/main/examples/font-test-2.jpg)
+![Font test 2](https://raw.githubusercontent.com/csdvrx/sixel-tmux/main/examples/font-test2.jpg)
 
 For the third test, you should see lines:
-![Font test 3](https://raw.githubusercontent.com/csdvrx/sixel-tmux/main/examples/font-test-3.jpg)
+![Font test 3](https://raw.githubusercontent.com/csdvrx/sixel-tmux/main/examples/font-test3.jpg)
 
 For the fourth test, you should see text in various languages, followed by the most important:  grids of various patterns:
-![Font test 4](https://raw.githubusercontent.com/csdvrx/sixel-tmux/main/examples/font-test-4.jpg)
+![Font test 4](https://raw.githubusercontent.com/csdvrx/sixel-tmux/main/examples/font-test4.jpg)
 
 In this test, boxes should be properly aligned, and lines should intersect cleanly.
 
