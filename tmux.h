@@ -55,6 +55,7 @@ struct options;
 struct options_entry;
 struct options_array_item;
 struct session;
+struct sixel_image;
 struct tmuxpeer;
 struct tmuxproc;
 struct winlink;
@@ -446,6 +447,7 @@ enum tty_code_code {
 	TTYC_SMULX,
 	TTYC_SMUL,
 	TTYC_SMXX,
+	TTYC_SXL,
 	TTYC_SS,
 	TTYC_TC,
 	TTYC_TSL,
@@ -1145,6 +1147,7 @@ struct tty_term {
 
 #define TERM_256COLOURS 0x1
 #define TERM_EARLYWRAP 0x2
+#define TERM_SIXEL 0x4
 	int		 flags;
 
 	LIST_ENTRY(tty_term) entry;
@@ -1201,6 +1204,7 @@ struct tty {
 #define TTY_OPENED 0x20
 #define TTY_FOCUS 0x40
 #define TTY_BLOCK 0x80
+#define TTY_NOBLOCK 0x100
 	int		 flags;
 
 	struct tty_term	*term;
@@ -1947,7 +1951,7 @@ void	tty_draw_line(struct tty *, struct window_pane *, struct screen *,
 int	tty_open(struct tty *, char **);
 void	tty_close(struct tty *);
 void	tty_free(struct tty *);
-void	tty_set_type(struct tty *, int);
+void	tty_set_type(struct tty *, int, int);
 void	tty_write(void (*)(struct tty *, const struct tty_ctx *),
 	    struct tty_ctx *);
 void	tty_cmd_alignmenttest(struct tty *, const struct tty_ctx *);
@@ -1971,6 +1975,7 @@ void	tty_cmd_scrolldown(struct tty *, const struct tty_ctx *);
 void	tty_cmd_reverseindex(struct tty *, const struct tty_ctx *);
 void	tty_cmd_setselection(struct tty *, const struct tty_ctx *);
 void	tty_cmd_rawstring(struct tty *, const struct tty_ctx *);
+void	tty_cmd_sixelimage(struct tty *, const struct tty_ctx *);
 
 /* tty-term.c */
 extern struct tty_terms tty_terms;
@@ -2357,6 +2362,7 @@ void	 screen_write_collect_add(struct screen_write_ctx *,
 void	 screen_write_cell(struct screen_write_ctx *, const struct grid_cell *);
 void	 screen_write_setselection(struct screen_write_ctx *, u_char *, u_int);
 void	 screen_write_rawstring(struct screen_write_ctx *, u_char *, u_int);
+void	 screen_write_sixelimage(struct screen_write_ctx *, struct sixel_image *);
 
 /* screen-redraw.c */
 void	 screen_redraw_screen(struct client *);
@@ -2698,5 +2704,16 @@ struct window_pane *spawn_pane(struct spawn_context *, char **);
 
 /* regsub.c */
 char		*regsub(const char *, const char *, const char *, int);
+
+/* sixel.c */
+struct sixel_image *sixel_parse(const char *, size_t, u_int, u_int);
+void		 sixel_free(struct sixel_image *);
+void		 sixel_log(struct sixel_image *);
+void		 sixel_size_in_cells(struct sixel_image *, u_int *, u_int *);
+struct sixel_image *sixel_scale(struct sixel_image *, u_int, u_int, u_int,
+		     u_int, u_int, u_int);
+char		*sixel_print(struct sixel_image *, struct sixel_image *,
+		     size_t *);
+struct screen	*sixel_to_screen(struct sixel_image *);
 
 #endif /* TMUX_H */
