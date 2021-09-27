@@ -65,6 +65,7 @@ struct session;
 struct tty_ctx;
 struct tty_code;
 struct tty_key;
+struct sixel_image;
 struct tmuxpeer;
 struct tmuxproc;
 struct winlink;
@@ -539,6 +540,7 @@ enum tty_code_code {
 	TTYC_SMUL,
 	TTYC_SMULX,
 	TTYC_SMXX,
+	TTYC_SXL,
 	TTYC_SS,
 	TTYC_SYNC,
 	TTYC_TC,
@@ -1322,6 +1324,8 @@ struct tty_term {
 #define TERM_DECFRA 0x8
 #define TERM_RGBCOLOURS 0x10
 #define TERM_VT100LIKE 0x20
+#define TERM_EARLYWRAP 0x2
+#define TERM_SIXEL 0x4
 	int		 flags;
 
 	LIST_ENTRY(tty_term) entry;
@@ -1381,6 +1385,7 @@ struct tty {
 #define TTY_HAVEDA 0x100
 #define TTY_HAVEXDA 0x200
 #define TTY_SYNCING 0x400
+#define TTY_NOBLOCK 0x100
 	int		 flags;
 
 	struct tty_term	*term;
@@ -2284,6 +2289,7 @@ void	tty_cmd_setselection(struct tty *, const struct tty_ctx *);
 void	tty_cmd_rawstring(struct tty *, const struct tty_ctx *);
 void	tty_cmd_syncstart(struct tty *, const struct tty_ctx *);
 void	tty_default_colours(struct grid_cell *, struct window_pane *);
+void	tty_cmd_sixelimage(struct tty *, const struct tty_ctx *);
 
 /* tty-term.c */
 extern struct tty_terms tty_terms;
@@ -2850,6 +2856,7 @@ void	 screen_write_alternateon(struct screen_write_ctx *,
 	     struct grid_cell *, int);
 void	 screen_write_alternateoff(struct screen_write_ctx *,
 	     struct grid_cell *, int);
+void	 screen_write_sixelimage(struct screen_write_ctx *, struct sixel_image *);
 
 /* screen-redraw.c */
 void	 screen_redraw_screen(struct client *);
@@ -3250,5 +3257,16 @@ struct window_pane *spawn_pane(struct spawn_context *, char **);
 
 /* regsub.c */
 char		*regsub(const char *, const char *, const char *, int);
+
+/* sixel.c */
+struct sixel_image *sixel_parse(const char *, size_t, u_int, u_int);
+void		 sixel_free(struct sixel_image *);
+void		 sixel_log(struct sixel_image *);
+void		 sixel_size_in_cells(struct sixel_image *, u_int *, u_int *);
+struct sixel_image *sixel_scale(struct sixel_image *, u_int, u_int, u_int,
+		     u_int, u_int, u_int);
+char		*sixel_print(struct sixel_image *, struct sixel_image *,
+		     size_t *);
+struct screen	*sixel_to_screen(struct sixel_image *);
 
 #endif /* TMUX_H */

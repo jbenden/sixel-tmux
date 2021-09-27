@@ -1252,9 +1252,11 @@ static int
 tty_keys_device_attributes(struct tty *tty, const char *buf, size_t len,
     size_t *size)
 {
-	struct client	*c = tty->client;
-	u_int		 i, n = 0;
-	char		 tmp[64], *endptr, p[32] = { 0 }, *cp, *next;
+	struct client		*c = tty->client;
+	u_int			 i, n = 0;
+	char			 tmp[64], *endptr, p[32] = { 0 }, *cp, *next;
+	static const char	*types[] = TTY_TYPES;
+	int			 type, flags = 0;
 
 	*size = 0;
 	if (tty->flags & TTY_HAVEDA)
@@ -1318,9 +1320,15 @@ tty_keys_device_attributes(struct tty *tty, const char *buf, size_t len,
 		tty_default_features(&c->term_features, "rxvt-unicode", 0);
 		break;
 	}
+	for (i = 2; i < n; i++) {
+		log_debug("%s: DA feature: %d", c->name, p[i]);
+		if (p[i] == 4)
+			flags |= TERM_SIXEL;
+	}
+
 	log_debug("%s: received secondary DA %.*s", c->name, (int)*size, buf);
 
-	tty_update_features(tty);
+	tty_update_features(tty, flags);
 	tty->flags |= TTY_HAVEDA;
 
 	return (0);
@@ -1387,7 +1395,7 @@ tty_keys_extended_device_attributes(struct tty *tty, const char *buf,
 	free(c->term_type);
 	c->term_type = xstrdup(tmp);
 
-	tty_update_features(tty);
+	tty_update_features(tty, tty->term_flags);
 	tty->flags |= TTY_HAVEXDA;
 
 	return (0);

@@ -309,9 +309,16 @@ server_client_open(struct client *c, char **cause)
 		xasprintf(cause, "can't use %s", c->ttyname);
 		return (-1);
 	}
+        // Windows terminal issue not found in mintty
+        // https://cygwin.com/pipermail/cygwin/2020-May/244878.html
+        // In Windows terminal, can use script to allocate a pty
 
 	if (!(c->flags & CLIENT_TERMINAL)) {
-		*cause = xstrdup("not a terminal");
+		//*cause = xstrdup("not a terminal");
+                // could show why it failed!
+                // In windows terminal, simply use script:
+                // /usr/bin/script -c '/usr/bin/tmux a' /dev/null
+		*cause = xstrdup(c->ttyname);
 		return (-1);
 	}
 
@@ -2528,7 +2535,7 @@ server_client_check_redraw(struct client *c)
 	 * end up back here.
 	 */
 	needed = 0;
-	if (c->flags & CLIENT_ALLREDRAWFLAGS)
+	if (c->flags & (CLIENT_ALLREDRAWFLAGS & ~CLIENT_REDRAWSTATUS))
 		needed = 1;
 	else {
 		TAILQ_FOREACH(wp, &w->panes, entry) {
@@ -2939,7 +2946,7 @@ server_client_dispatch_identify(struct client *c, struct imsg *imsg)
 	c->name = name;
 	log_debug("client %p name is %s", c, c->name);
 
-#ifdef __CYGWIN__
+#if __MSYS__ || __CYGWIN__ || _WIN32 || _WIN64
 	c->fd = open(c->ttyname, O_RDWR|O_NOCTTY);
 #endif
 

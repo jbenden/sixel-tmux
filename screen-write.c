@@ -2138,3 +2138,43 @@ screen_write_alternateoff(struct screen_write_ctx *ctx, struct grid_cell *gc,
 	screen_write_initctx(ctx, &ttyctx, 1);
 	ttyctx.redraw_cb(&ttyctx);
 }
+
+/* Write a SIXEL image */
+void
+screen_write_sixelimage(struct screen_write_ctx *ctx, struct sixel_image *si)
+{
+	struct tty_ctx	 ttyctx;
+	struct screen	*s = ctx->s, *image;
+	u_int		 sx = screen_size_x(s), sy = screen_size_y(s);
+
+	image = sixel_to_screen(si);
+
+        if (image == NULL)
+		return;
+
+	/* Reserve some space in the terminal for the sixel */
+	for (u_int i = 0; i < image->grid->sy; i++)
+		screen_write_linefeed(ctx, 0, 8);
+
+	/* Go to its beginning */
+	screen_write_set_cursor(ctx, ctx->s->cx, ctx->s->cy - image->grid->sy);
+
+        /* Flush to ensure scrolling is done at that point */
+	screen_write_collect_flush(ctx, 0);
+
+        /* Fill up */
+	sx = sx - s->cx;
+	if (sx > screen_size_x(image))
+		sx = screen_size_x(image);
+	sy = sy - s->cx;
+	if (sy > screen_size_x(image))
+		sy = screen_size_x(image);
+	screen_write_fast_copy(ctx, image, 0, 0, sx, sy);
+
+	screen_write_initctx(ctx, &ttyctx);
+	ttyctx.ptr = si;
+	tty_write(tty_cmd_sixelimage, &ttyctx);
+
+	/* Go to its end  */ 
+	screen_write_set_cursor(ctx, ctx->s->cx, ctx->s->cy + image->grid->sy);
+}
