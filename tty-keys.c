@@ -1257,7 +1257,9 @@ tty_keys_device_attributes(struct tty *tty, const char *buf, size_t len,
 	char			 tmp[64], *endptr, p[32] = { 0 }, *cp, *next;
 
 	*size = 0;
-	if (tty->flags & TTY_HAVEDA)
+	if (tty->flags & TTY_HAVEDA1)
+		return (-1);
+	if (tty->flags & TTY_HAVEDA2)
 		return (-1);
 
 	/*
@@ -1334,7 +1336,11 @@ tty_keys_device_attributes(struct tty *tty, const char *buf, size_t len,
 		log_debug("%s: received secondary DA %.*s", c->name, (int)*size, buf);
 
 	tty_update_features(tty);
-	tty->flags |= TTY_HAVEDA;
+
+	if (buf[2] == '?')
+		tty->flags |= TTY_HAVEDA1;
+	else
+		tty->flags |= TTY_HAVEDA2;
 
 	return (0);
 }

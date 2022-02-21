@@ -1382,9 +1382,10 @@ struct tty {
 #define TTY_OPENED 0x20
 #define TTY_OSC52QUERY 0x40
 #define TTY_BLOCK 0x80
-#define TTY_HAVEDA 0x100
-#define TTY_HAVEXDA 0x200
-#define TTY_SYNCING 0x400
+#define TTY_HAVEDA1 0x100
+#define TTY_HAVEDA2 0x200
+#define TTY_HAVEXDA 0x400
+#define TTY_SYNCING 0x800
 	int		 flags;
 
 	struct tty_term	*term;
