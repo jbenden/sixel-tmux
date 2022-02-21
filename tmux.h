@@ -1324,8 +1324,8 @@ struct tty_term {
 #define TERM_DECFRA 0x8
 #define TERM_RGBCOLOURS 0x10
 #define TERM_VT100LIKE 0x20
-#define TERM_EARLYWRAP 0x2
-#define TERM_SIXEL 0x4
+#define TERM_EARLYWRAP 0x40
+#define TERM_SIXEL 0x80
 	int		 flags;
 
 	LIST_ENTRY(tty_term) entry;
