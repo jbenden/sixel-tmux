@@ -1291,8 +1291,10 @@ tty_keys_device_attributes(struct tty *tty, const char *buf, size_t len,
 	*size = 4 + i;
 
 	/* Ignore DA response. */
+	/*
 	if (buf[2] == '?')
 		return (0);
+	*/
 
 	/* Convert all arguments to numbers. */
 	cp = tmp;
@@ -1318,15 +1320,18 @@ tty_keys_device_attributes(struct tty *tty, const char *buf, size_t len,
 		tty_default_features(&c->term_features, "rxvt-unicode", 0);
 		break;
 	}
-	for (i = 2; i < n; i++) {
+	for (i = 0; i < n; i++) {
 		log_debug("%s: DA feature: %d", c->name, p[i]);
-		if (p[i] == 4) {
+		if (p[i] == 4 || p[i] == '4') {
 			log_debug("%s: Enabled SIXEL support", c->name);
 			tty->term->flags |= TERM_SIXEL;
 		}
 	}
 
-	log_debug("%s: received secondary DA %.*s", c->name, (int)*size, buf);
+	if (buf[2] == '?')
+		log_debug("%s: received primary DA %.*s", c->name, (int)*size, buf);
+	else
+		log_debug("%s: received secondary DA %.*s", c->name, (int)*size, buf);
 
 	tty_update_features(tty);
 	tty->flags |= TTY_HAVEDA;
