@@ -2171,7 +2171,7 @@ screen_write_sixelimage(struct screen_write_ctx *ctx, struct sixel_image *si)
 		sy = screen_size_x(image);
 	screen_write_fast_copy(ctx, image, 0, 0, sx, sy);
 
-	screen_write_initctx(ctx, &ttyctx);
+	screen_write_initctx(ctx, &ttyctx, 0);
 	ttyctx.ptr = si;
 	tty_write(tty_cmd_sixelimage, &ttyctx);
 
