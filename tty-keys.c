@@ -1257,10 +1257,12 @@ tty_keys_device_attributes(struct tty *tty, const char *buf, size_t len,
 	char			 tmp[64], *endptr, p[32] = { 0 }, *cp, *next;
 
 	*size = 0;
+	/*
 	if (tty->flags & TTY_HAVEDA1)
 		return (-1);
 	if (tty->flags & TTY_HAVEDA2)
 		return (-1);
+	*/
 
 	/*
 	 * First three bytes are always \033[>. Some older Terminal.app
