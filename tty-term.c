@@ -394,7 +394,7 @@ tty_term_apply(struct tty_term *term, const char *capabilities, int quiet)
 
 		for (i = 0; i < tty_term_ncodes(); i++) {
 			ent = &tty_term_codes[i];
-			if (strcmp(s, ent->name) != 0)
+			if (ent->name && strcmp(s, ent->name) != 0)
 				continue;
 			code = &term->codes[i];
 
