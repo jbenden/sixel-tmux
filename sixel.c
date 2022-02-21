@@ -1462,7 +1462,7 @@ sixel_print_repeat(char **buf, size_t *len, size_t *used, u_int count, char ch)
 char *
 sixel_print(struct sixel_image *si, struct sixel_image *map, size_t *size)
 {
-	char			*buf, tmp[64], *contains, data, last;
+	char			*buf, tmp[64], *contains, data = 0, last = 0;
 	size_t			 len, used = 0, tmplen;
 	u_int			*colours, ncolours, i, c, x, y, count;
 	struct sixel_line	*sl;
@@ -1604,7 +1604,7 @@ static float adjudicate(u_int glyph_idx, float bg[CN], float fg[CN], const float
 static u_int
 sixel_derasterize_block(unsigned char *rgb_block, u_int gs, unsigned char *picked_fg, unsigned char *picked_bg) {
 	float 	best, lin_block[CN * gs], r;
-	u_int 	picked_glyph;
+	u_int 	picked_glyph = 0;
 	u_int 	temp_b[CN], temp_f[CN];
 	unsigned char 	b[CN], f[CN];
 	float 	bf[CN], ff[CN];
