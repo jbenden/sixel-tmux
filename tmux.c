@@ -223,7 +223,7 @@ make_label(const char *label, char **cause)
 		goto fail;
 	}
 // msys2 https://github.com/msys2/MSYS2-packages/issues/
-#if __MSYS__ || __CYGWIN__ || _WIN32 || _WIN64
+#if defined(__MSYS__) || defined(__CYGWIN__) || defined(_WIN32) || defined(_WIN64)
         if (sb.st_uid != uid) {
 #else
 	if (sb.st_uid != uid || (sb.st_mode & S_IRWXO) != 0) {
