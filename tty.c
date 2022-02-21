@@ -2121,6 +2121,7 @@ tty_cmd_syncstart(struct tty *tty, const struct tty_ctx *ctx)
 	}
 }
 
+void
 tty_cmd_sixelimage(struct tty *tty, const struct tty_ctx *ctx)
 {
 	struct window_pane	*wp = ctx->wp;
