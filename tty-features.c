@@ -91,7 +91,7 @@ static const char *tty_feature_rgb_capabilities[] = {
 static const struct tty_feature tty_feature_rgb = {
 	"RGB",
 	tty_feature_rgb_capabilities,
-	TERM_256COLOURS|TERM_RGBCOLOURS
+	TERM_256COLOURS|TERM_RGBCOLOURS|TERM_SIXEL
 };
 
 /* Terminal supports 256 colours. */
