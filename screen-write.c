@@ -2160,7 +2160,7 @@ screen_write_sixelimage(struct screen_write_ctx *ctx, struct sixel_image *si)
 	screen_write_set_cursor(ctx, ctx->s->cx, ctx->s->cy - image->grid->sy);
 
         /* Flush to ensure scrolling is done at that point */
-	screen_write_collect_flush(ctx, 0);
+	screen_write_collect_flush(ctx, 0, __func__);
 
         /* Fill up */
 	sx = sx - s->cx;
