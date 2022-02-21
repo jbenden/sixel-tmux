@@ -235,7 +235,7 @@ static const char *format_lower[] = {
 };
 
 /* Is logging enabled? */
-static inline int
+static int
 format_logging(struct format_tree *ft)
 {
 	return (log_get_level() != 0 || (ft->flags & FORMAT_VERBOSE));
