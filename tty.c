@@ -461,11 +461,9 @@ tty_free(struct tty *tty)
 }
 
 void
-tty_update_features(struct tty *tty, int flags)
+tty_update_features(struct tty *tty)
 {
 	struct client	*c = tty->client;
-
-	tty->term_flags |= flags;
 
 	if (tty_apply_features(tty->term, c->term_features))
 		tty_term_apply_overrides(tty->term);
@@ -2129,7 +2127,7 @@ tty_cmd_sixelimage(struct tty *tty, const struct tty_ctx *ctx)
 	struct screen		*s = wp->screen;
 	struct sixel_image	*si = ctx->ptr;
 	struct sixel_image	*new;
-	int			 flags = (tty->term->flags|tty->term_flags);
+	int			 flags = tty->term->flags;
 	char			*data;
 	size_t			 size;
 	u_int			 cx = s->cx, cy = s->cy, sx, sy;
