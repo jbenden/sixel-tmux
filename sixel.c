@@ -1608,7 +1608,7 @@ sixel_derasterize_block(unsigned char *rgb_block, u_int gs, unsigned char *picke
 	u_int 	temp_b[CN], temp_f[CN];
 	unsigned char 	b[CN], f[CN];
 	float 	bf[CN], ff[CN];
-	int	ones;
+	u_int	ones;
 
 	best = -1u;
 	rgb2lin(lin_block, rgb_block, CN * gs);
@@ -1669,15 +1669,14 @@ sixel_to_screen(struct sixel_image *si)
 	u_int			 gx = 8, gy = 16; /* TODO */
 	struct screen		*s;
 	struct screen_write_ctx	 ctx;
-	u_int			 cell_, cell_y, sx, sy;
+	u_int			 sx, sy;
 	unsigned char 		*rgbdata = NULL, *rgb_block;
 	u_int 			 rgbdata_size;
 	u_int			*colours;
-	float			 H, L, S, C, X, M, _R, _G, _B;
+	float			 H, L, S, C, X, m, _R, _G, _B;
 	u_int			 R, G, B, flag, source_x, source_y, source_colour, glyph_idx;
 	unsigned char		 fg[CN], bg[CN];
 	struct grid_cell	 gc;
-	int			 utf8_size;
 	char			 utf8[8], *end;
 
 	sixel_size_in_cells(si, &sx, &sy);
