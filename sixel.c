@@ -19,6 +19,7 @@
 #include <sys/types.h>
 //#include <uchar.h>
 
+#include <math.h>
 #include <stdlib.h>
 #include <inttypes.h>
 #include <string.h>
@@ -85,7 +86,7 @@ static const wchar_t kRunes[] = {
     u'◣', /* 25E3 black lower left triangle */
     u'◥', /* 25E4 black upper right triangle */
     u'◤', /* 25E5 black upper left triangle */
-    // FIXME: add diagonals lines ,‘` /\ and less angleed: ╱╲ cf /╱╲\
+    /* FIXME: add diagonals lines ,‘` /\ and less angleed: ╱╲ cf /╱╲\ */
     u'═', /* 2550 box drawings double horizontal */
     u'⎻', /* 23BB horizontal scan line 3 */
     u'⎼', /* 23BD horizontal scan line 9 */
@@ -1000,8 +1001,9 @@ RRBB128(0b00000000,
 
 
 static unsigned bsr(unsigned x) {
-#if -__STRICT_ANSI__ + !!(__GNUC__ + 0) && (__i386__ + __x86_64__ + 0)
-  asm("bsr\t%1,%0" : "=r"(x) : "r"(x) : "cc");
+#if defined(__GNUC__)
+        /* https://stackoverflow.com/questions/9353973/implementation-of-builtin-clz */
+	return __builtin_clz(x) ^ 31;
 #else
   static const unsigned char kDebruijn[32] = {
       0, 9,  1,  10, 13, 21, 2,  29, 11, 14, 16, 18, 22, 25, 3, 30,
@@ -1163,9 +1165,11 @@ sixel_parse_attributes(struct sixel_image *si, const char *cp, const char *end)
 	d = strtoul(cp, &endptr, 10);
 	if (endptr == last || *endptr != ';')
 		return (last);
+	(void)d;
 	d = strtoul(endptr + 1, &endptr, 10);
 	if (endptr == last || *endptr != ';')
 		return (NULL);
+	(void)d;
 
 	x = strtoul(endptr + 1, &endptr, 10);
 	if (endptr == last || *endptr != ';')
@@ -1583,7 +1587,7 @@ static float adjudicate(u_int glyph_idx, float bg[CN], float fg[CN], const float
 	for (u_int c = 0; c < CN; c++) {
 		float fg_chan = fg[c];
 		float bg_chan = bg[c];
-		float *this_chan = lb + c * gs;
+		float *this_chan = (float *)lb + c * gs;
 
 		for (u_int i = 0; i < gs; i++) {
 			uint128_t one = 1;
@@ -1597,12 +1601,14 @@ static float adjudicate(u_int glyph_idx, float bg[CN], float fg[CN], const float
 	return dist_sq;
 }
 
-u_int sixel_derasterize_block(unsigned char *rgb_block, u_int gs, unsigned char *picked_fg, unsigned char *picked_bg) {
-	float 	best, lin_block[CN * gs];
+static u_int
+sixel_derasterize_block(unsigned char *rgb_block, u_int gs, unsigned char *picked_fg, unsigned char *picked_bg) {
+	float 	best, lin_block[CN * gs], r;
 	u_int 	picked_glyph;
 	u_int 	temp_b[CN], temp_f[CN];
 	unsigned char 	b[CN], f[CN];
 	float 	bf[CN], ff[CN];
+	int	ones;
 
 	best = -1u;
 	rgb2lin(lin_block, rgb_block, CN * gs);
@@ -1615,7 +1621,7 @@ u_int sixel_derasterize_block(unsigned char *rgb_block, u_int gs, unsigned char 
 
 		 
 		/* Compute the best background/foreground color to use with the currently tried glyph */
-		int ones = 0;
+		ones = 0;
 		for (u_int i = 0; i < gs; i++) {
 			uint128_t one = 1;
 			if (kGlyphs128[glyph_idx] & (one << i)) {
@@ -1645,7 +1651,7 @@ u_int sixel_derasterize_block(unsigned char *rgb_block, u_int gs, unsigned char 
 		rgb2lin(bf, b, CN);
 		rgb2lin(ff, f, CN);
 
-		float r = adjudicate(glyph_idx, bf, ff, lin_block, gs, best);
+		r = adjudicate(glyph_idx, bf, ff, lin_block, gs, best);
 		if (r < best) {
 			best = r;
 			picked_glyph = glyph_idx;
@@ -1660,47 +1666,51 @@ u_int sixel_derasterize_block(unsigned char *rgb_block, u_int gs, unsigned char 
 struct screen *
 sixel_to_screen(struct sixel_image *si)
 {
-	u_int gx = 8, gy = 16; /* TODO */ 
+	u_int			 gx = 8, gy = 16; /* TODO */
 	struct screen		*s;
 	struct screen_write_ctx	 ctx;
 	u_int			 cell_, cell_y, sx, sy;
-	unsigned char 			*rgbdata = NULL;
-	u_int 			rgbdata_size;
+	unsigned char 		*rgbdata = NULL, *rgb_block;
+	u_int 			 rgbdata_size;
+	u_int			*colours;
+	float			 H, L, S, C, X, M, _R, _G, _B;
+	u_int			 R, G, B, flag, source_x, source_y, source_colour, glyph_idx;
+	unsigned char		 fg[CN], bg[CN];
+	struct grid_cell	 gc;
+	int			 utf8_size;
+	char			 utf8[8], *end;
 
 	sixel_size_in_cells(si, &sx, &sy);
 
 	s = xmalloc(sizeof *s);
 	screen_init(s, sx, sy, 0);
 
+	screen_write_start(&ctx, s);
 
-	screen_write_start(&ctx, NULL, s);
-
-   	rgbdata_size = CN * sx * sy * gx * gy;
+	rgbdata_size = CN * sx * sy * gx * gy;
 	rgbdata = xmalloc(rgbdata_size);
 	memset(rgbdata, 0, rgbdata_size);
 
-	u_int *colours = xmalloc(si->ncolours * sizeof(u_int));
+	colours = xmalloc(si->ncolours * sizeof(u_int));
 	/* Convert HSL to RGB if necessary */
 	for (u_int k = 0; k < si->ncolours; k++) {
-		u_int R = 0;
-		u_int G = 0;
-		u_int B = 0;
-		u_int flag = SIXEL_FLAG_RGB;
+		R = 0;
+		G = 0;
+		B = 0;
+		flag = SIXEL_FLAG_RGB;
 		if (si->colours[k] & SIXEL_FLAG_HSL) {
-
 			/* sixel HSL format is in fact 0xHHLLSS and H=0 is blue */ 
-			float H = ((si->colours[k] >> 16) & 0x1FF);
+			H = ((si->colours[k] >> 16) & 0x1FF);
 			H -= 120.0;
 			if (H < 0.0)
 				H += 360.0;
-			float L = ((si->colours[k] >> 8) & 0xFF) / 100.0;
-			float S = (si->colours[k] & 0xFF) / 100.0;
+			L = ((si->colours[k] >> 8) & 0xFF) / 100.0;
+			S = (si->colours[k] & 0xFF) / 100.0;
 			
-			float C = (1.0 - fabs(2*L - 1.0)) * S; /* range [0;10000] */
-			float X = C * (1.0 - fabs(fmodf((H / 60.0), 2.0) - 1));
-			float m = L - C/2;
+			C = (1.0 - fabs(2*L - 1.0)) * S; /* range [0;10000] */
+			X = C * (1.0 - fabs(fmodf((H / 60.0), 2.0) - 1));
+			m = L - C/2;
 
-			float _R, _G, _B;
 			if (H < 60) {
 				_R = C;
 				_G = X;
@@ -1744,11 +1754,11 @@ sixel_to_screen(struct sixel_image *si)
 	for (u_int c = 0; c < CN; c++) {
 		for (u_int x = 0; x < sx * gx; x++) {
 			for (u_int y = 0; y < sy * gy; y++) {
-				u_int source_x = (x * si->xpixel) / gx;
-				u_int source_y = (y * si->ypixel) / gy;
+				source_x = (x * si->xpixel) / gx;
+				source_y = (y * si->ypixel) / gy;
 
 				if ((source_x >= si->x) || (source_y >= si->y)) continue;
-				u_int source_colour = si->lines[source_y].data[source_x];
+				source_colour = si->lines[source_y].data[source_x];
 
 				if ((source_colour <= 0) || (source_colour > si->ncolours)) continue;
 
@@ -1760,10 +1770,9 @@ sixel_to_screen(struct sixel_image *si)
 	free(colours);
 
 	/* derasterize */
-	unsigned char *rgb_block = xmalloc(CN * gx * gy);
+	rgb_block = xmalloc(CN * gx * gy);
 	for (u_int cell_x = 0; cell_x < sx; cell_x++) {
 		for (u_int cell_y = 0; cell_y < sy; cell_y++) {
-
 			/* extract gx x gy block from rgbdata */
 			for (u_int c = 0; c < CN; c++) {
 				for (u_int y = 0; y < gy; y++) {
@@ -1772,16 +1781,11 @@ sixel_to_screen(struct sixel_image *si)
 			}
 
 			/* pick glyph and bg/fg color closest to rgb block */
-			unsigned char fg[CN];
-			unsigned char bg[CN];
-			u_int glyph_idx = sixel_derasterize_block(rgb_block, gx * gy, fg, bg);
+			glyph_idx = sixel_derasterize_block(rgb_block, gx * gy, fg, bg);
 
 			/* build grid cell corresponding to glyph and colors */
-			struct grid_cell gc;
 			memcpy(&gc, &grid_default_cell, sizeof gc);
-			int utf8_size;
-			char utf8[8]; /* even though utf8 max size is 4, tptoa documentation requires a 8 bytes buffer */ 
-			char *end = tptoa(utf8, kRunes[glyph_idx]);
+			end = tptoa(utf8, kRunes[glyph_idx]);
 			for (char *ptr = utf8; ptr != end; ptr++) {
 				if (ptr == utf8) {
 					if (ptr + 1 == end) {
