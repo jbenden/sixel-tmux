@@ -544,9 +544,9 @@ tty_term_create(struct tty *tty, char *name, char **caps, u_int ncaps,
 
 		for (j = 0; j < tty_term_ncodes(); j++) {
 			ent = &tty_term_codes[j];
-			if (strncmp(ent->name, caps[i], namelen) != 0)
+			if (ent->name && strncmp(ent->name, caps[i], namelen) != 0)
 				continue;
-			if (ent->name[namelen] != '\0')
+			if (ent->name && ent->name[namelen] != '\0')
 				continue;
 
 			code = &term->codes[j];
