@@ -2946,7 +2946,7 @@ server_client_dispatch_identify(struct client *c, struct imsg *imsg)
 	c->name = name;
 	log_debug("client %p name is %s", c, c->name);
 
-#if __MSYS__ || __CYGWIN__ || _WIN32 || _WIN64
+#if defined(__MSYS__) || defined(__CYGWIN__) || defined(_WIN32) || defined(_WIN64)
 	c->fd = open(c->ttyname, O_RDWR|O_NOCTTY);
 #endif
 
